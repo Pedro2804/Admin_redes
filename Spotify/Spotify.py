@@ -28,6 +28,7 @@ def is_url(url):
 def get_URL():
     #Pedimos al usuario el link de su playlist de Spotify
     playlist_link = textbox.get()
+    text_area.delete("1.0", tk.END)
 
     if(playlist_link != '' and is_url(playlist_link)):
         #Descomponemos la URL a un array, separando al url por '/'
@@ -38,11 +39,20 @@ def get_URL():
             if('?' in playlist_array[4]):
                 #Descomponemos la ultima parte de la URL donde se encuentra el ID de la playlist separado por '?'
                 playlist_id =  playlist_array[4].split('?')
-                text_area.delete("1.0", tk.END)
+
                 list_name, name_dir = get_name_music(playlist_id[0])
+                i=1
+                limit = len(list_name)
+                print("\nDownloading")
                 for name in list_name:
                     download_music(name, name_dir)
-                    break
+                    bar = bar_progres(i, limit, 100)
+                    print(f"{bar}", end = "\r")
+                    i += 1
+                    #break
+
+                textbox.delete(0, tk.END)
+                print("\n\nDownload complete\n")
             else:
                 messagebox.showinfo("Error!!!...", "Enter a URL with a valid ID")
                 textbox.delete(0, tk.END)
@@ -105,26 +115,38 @@ def download_music(name_music, name_dir):
         # Buscar videos relacionados con el nombre de la música en YouTube
         Search = VideosSearch(name_music, limit = 1)
 
-        busqueda = Search.result()
+        result = Search.result()
         
         # Obtener la URL del primer video de la búsqueda
-        url_video = busqueda['result'][-1]['link']
+        url_video = result['result'][-1]['link']
 
         # Crear objeto YouTube
         video = YouTube(url_video)
 
         # Seleccionar solo las corrientes de audio
-        #video.streams.filter(only_audio=True).first().download(output_path=name_dir)
-        video.streams.filter(only_audio=True).order_by('abr').last().download(output_path=name_dir)
-        
+        video.streams.filter(only_audio=True).first().download(output_path=name_dir)
+        #char = ['\\', '/', ':', '*', '?', '"', '<', '>', '|', '(', ')', '-']
+        #for c in char:
+            #if c in name_music:
+                #name_music = name_music.replace(c, "")
+
+        #os.rename(os.path.join(name_dir, name_music+'.mp4'), os.path.join(name_dir, name_music+'.mp3'))
+
         text_area.config(state=tk.NORMAL) 
-        text_area.insert(tk.END,  f"Video '{busqueda['result'][0]['title']}' successful download."+'\n')
+        text_area.insert(tk.END,  f">'{result['result'][0]['title']}' successful download.\n")
         text_area.config(state=tk.DISABLED)
 
     except Exception as e:
         text_area.config(state=tk.NORMAL) 
-        text_area.insert(tk.END, f"Video '{busqueda['result'][0]['title']}' fail download."+'\n'+str(e)+'\n')
+        text_area.insert(tk.END, f">'{result['result'][0]['title']}' fail download.\n"+str(e)+"\n")
         text_area.config(state=tk.DISABLED)
+
+def bar_progres(segment, total, long):
+    porcent = segment / total
+    complete = int(porcent * long)
+    missing = long - complete
+    bar = f"[{'#' * complete}{'°' * missing}{porcent:.2%}]"
+    return bar
 
 #Settings of window 
 window = tk.Tk()
@@ -133,8 +155,8 @@ window.resizable(width=False, height=False)
 screen_width = window.winfo_screenwidth()
 screen_height = window.winfo_screenheight()
 x_position = (screen_width - 600) // 2
-y_position = (screen_height - 500) // 2
-window.geometry("600x500+{}+{}".format(x_position, y_position))
+y_position = (screen_height - 400) // 2
+window.geometry("600x400+{}+{}".format(x_position, y_position))
 
 #Settings of textbox
 label_btn = tk.Label(window, text="URL of playlist", font=("Bold", 14))
@@ -151,16 +173,4 @@ text_area.pack()
 
 window.mainloop()
 
-'''
 #https://open.spotify.com/playlist/1IzIMoFRUoLCg4GMkvmNPs?si=f28c40f6020a466b
-
-#PARA VIDEO
-        # Crear objeto YouTube
-        video = YouTube(url_video)
-
-        # Seleccionar la mejor calidad disponible
-        stream = video.streams.get_highest_resolution()
-
-        # Descargar el video
-        stream.download()
-'''

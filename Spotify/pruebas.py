@@ -1,33 +1,14 @@
-from tkinter import messagebox, simpledialog
-import tkinter as tk
+#PARA VIDEO
+        # Crear objeto YouTube
+        #video = YouTube(url_video)
 
-def validate_name(name):
-    # Lista de caracteres no permitidos en nombres de carpetas en Windows
-    char = ['\\', '/', ':', '*', '?', '"', '<', '>', '|']
-    
-    #Caracteres no permitidos
-    if any(c in name for c in char):
-        return False
-    
-    #Termina con un punto
-    if name.endswith('.'):
-        return False
-    
-    #Espacio en blanco
-    if name.isspace():
-        return False
-    
-    return True
+        # Seleccionar la mejor calidad disponible
+        #stream = video.streams.get_highest_resolution()
 
-new_name = ""
-while new_name == "":
-    new_name = simpledialog.askstring("New name", "Enter a new name for the directory.:")
+        # Descargar el video
+        #stream.download(output_path=name_dir)
 
-    if new_name == None:
-        break
-    
-    if validate_name(new_name) != True:
-        messagebox.showinfo("Error!!!...", "Enter a valid name")
-        new_name = ""
-
-print(new_name)
+#cambiar extencion
+#name_video = result['result'][0]['title']
+#video.streams.filter(only_audio=True).order_by('abr').last().download(output_path=name_dir)
+#os.rename(os.path.join(name_dir, name_video+'.webm'), os.path.join(name_dir, name_video'.mp3'))
