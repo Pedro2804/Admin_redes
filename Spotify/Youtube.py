@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 # Importamos la librería pytube para descargar videos de YouTube
 from pytube import YouTube
 import os
+import platform
 
 def is_url(url):
     try:
@@ -15,6 +16,10 @@ def is_url(url):
         return False
     
 def get_URL():
+    if platform.system() == 'Windows':
+        os.system('cls')
+    else:
+        os.system('clear')
     #Pedimos al usuario el link de su playlist de Spotify
     video_link = textbox.get()
     text_area.delete("1.0", tk.END)
@@ -30,16 +35,22 @@ def get_URL():
                 video_id =  playlist_array[3].split('?')
                 if video_id[0] == 'watch':
                     option = var.get()
-                    i=1
-                    limit = 100
-                    print("\nDownloading")
-                    download_music(video_link, option)
-                    bar = bar_progres(i, limit, 100)
-                    print(f"{bar}", end = "\r")
-                    i += 1
+                    if option > 0:
+                        i=1
+                        limit = 100
+                        print("\nDownloading")
+                        bar = bar_progres(0, limit, 50)
+                        print(f"{bar}", end = "\r")
+                        download_music(video_link, option)
+                        bar = bar_progres(i, limit, 50)
+                        print(f"{bar}", end = "\r")
+                        i += 1
 
-                    textbox.delete(0, tk.END)
-                    print("\n\nDownload complete\n")   
+                        textbox.delete(0, tk.END)
+                        var.set(0)
+                        print("\n\nDownload complete\n")
+                    else:
+                        messagebox.showinfo("Error!!!...", "Select a option")
                 else:
                     messagebox.showinfo("Error!!!...", "Enter a valid URL")
         else:
@@ -53,31 +64,40 @@ def download_music(url_video, option):
         # Crear objeto YouTube
         video = YouTube(url_video)
 
-        if option == 1:
-            video.streams.filter(only_audio=True).first().download()
-            #char = ['\\', '/', ':', '*', '?', '"', '<', '>', '|', '(', ')', '-']
-            #for c in char:
-                #if c in name_music:
-                    #name_music = name_music.replace(c, "")
+        # Ruta completa de la carpeta de Descargas usando la variable de entorno
+        download_path = os.path.join(os.path.expanduser("~"), "Downloads")
 
-            #os.rename(os.path.join(name_dir, name_music+'.mp4'), os.path.join(name_dir, name_music+'.mp3'))
+        if option == 1:
+            video.streams.get_audio_only().download(output_path=download_path)
+            name_music_aux = video.title
+            new_name_music = name_music_aux
+            char = ['\\', '/', ':', '*', '?', '"', '<', '>', '|', "'"]
+            for c in char:
+                if c in name_music_aux:
+                    new_name_music = name_music_aux.replace(c, "")
+                else:
+                    new_name_music = new_name_music
+
+            os.rename(os.path.join(download_path, new_name_music+'.mp4'), os.path.join(download_path, new_name_music+'.mp3'))
+            type = "Audio"
         else:
-            video.streams.get_highest_resolution().download()
+            video.streams.get_highest_resolution().download(output_path=download_path)
+            type = "Video"
 
         text_area.config(state=tk.NORMAL) 
-        text_area.insert(tk.END,  f">'{video}' successful download.\n")
+        text_area.insert(tk.END,  f"> {type}: '{video.title}' -> successful download.\n")
         text_area.config(state=tk.DISABLED)
 
     except Exception as e:
         text_area.config(state=tk.NORMAL) 
-        text_area.insert(tk.END, f">'{video}' fail download.\n'{e}'\n")
+        text_area.insert(tk.END, "> Fail download -> URL invalid\n")
         text_area.config(state=tk.DISABLED)
 
 def bar_progres(segment, total, long):
     porcent = segment / total
     complete = int(porcent * long)
     missing = long - complete
-    bar = f"[{'#' * complete}{'°' * missing}{porcent:.2%}]"
+    bar = f"[{'=' * complete}{'-' * missing}{porcent:.2%}]"
     return bar
 
 #Settings of window 

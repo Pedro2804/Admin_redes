@@ -10,13 +10,29 @@ from urllib.parse import urlparse
 from pytube import YouTube
 from youtubesearchpython import VideosSearch
 import os
+import requests
+import platform
 
 def credentials():
     # Configura las credenciales de la API
-    return spotipy.Spotify(auth_manager=SpotifyOAuth(client_id='475b12b3051d48c8922edfb1ba57954e',
-                                                client_secret='5d72bcddbfb44a4b8d5b35967e0a1866',
+    return spotipy.Spotify(auth_manager=SpotifyOAuth(client_id='2da4b97d025147389086d1304eb8779d',
+                                                client_secret='6ae2b34369e34fbe81cf3dcd2bcb2efe',
                                                 redirect_uri='http://localhost/',
                                                 scope='playlist-read-private'))
+
+def new_token(credential_old):
+    url = "https://accounts.spotify.com/api/token"
+    data = {
+        "grant_type": "refresh_token",
+        "refresh_token": "AQCNCdVHyJdRFU5Fkg9fxQZncB9B6j1XxlMH_fAZ-6M8mgGJxXVdJ4G8bDLbkbE1wHHGrT7Aq66gD5dFapwwoTxBfp3bK25YT3KhX0wkhUR6Z4hubMh1NnTU18A2SgDLMAg"
+    }
+    headers = {
+        "Authorization": credential_old
+    }
+
+    response = requests.post(url, data=data, headers=headers)
+    return response
+
 
 def is_url(url):
     try:
@@ -26,6 +42,10 @@ def is_url(url):
         return False
     
 def get_URL():
+    if platform.system() == 'Windows':
+        os.system('cls')
+    else:
+        os.system('clear')
     #Pedimos al usuario el link de su playlist de Spotify
     playlist_link = textbox.get()
     text_area.delete("1.0", tk.END)
@@ -49,9 +69,12 @@ def get_URL():
                 i=1
                 limit = len(list_name)
                 print("\nDownloading")
+                bar = bar_progres(0, limit, 50)
+                print(f"{bar}", end = "\r")
+
                 for name in list_name:
                     download_music(name, name_dir)
-                    bar = bar_progres(i, limit, 100)
+                    bar = bar_progres(i, limit, 50)
                     print(f"{bar}", end = "\r")
                     i += 1
                     #break
@@ -70,6 +93,11 @@ def get_name_music(playlist_id):
 
     try:
         sp = credentials()
+        #request = new_token(sp)
+        #text_area.config(state=tk.NORMAL) 
+        #text_area.insert(tk.END,  request)
+        #text_area.config(state=tk.DISABLED)
+        #exit()
         # Obtiene la lista de reproducción
         playlist = sp.playlist(playlist_id)
         name_dir = create_dir(playlist['name'])
@@ -85,6 +113,7 @@ def get_name_music(playlist_id):
         
         return list_name, name_dir
     except Exception as e:
+        #print(f"{e}")
         messagebox.showinfo("Error!!!...", f"The playlist doesn't exist.\n{e}")
         return "", ""
 
@@ -135,28 +164,35 @@ def download_music(name_music, name_dir):
         video = YouTube(url_video)
 
         # Seleccionar solo las corrientes de audio
-        video.streams.filter(only_audio=True).first().download(output_path=name_dir)
-        #char = ['\\', '/', ':', '*', '?', '"', '<', '>', '|', '(', ')', '-']
-        #for c in char:
-            #if c in name_music:
-                #name_music = name_music.replace(c, "")
-
-        #os.rename(os.path.join(name_dir, name_music+'.mp4'), os.path.join(name_dir, name_music+'.mp3'))
+        #video.streams.filter(only_audio=True).first().download(output_path=name_dir)
+        video.streams.get_audio_only().download(output_path=name_dir)
+        
+        name_music_aux = video.title
+        new_name_music = name_music_aux
+        char = ['\\', '/', ':', '*', '?', '"', '<', '>', '|', "'"]
+        for c in char:
+            if c in name_music_aux:
+                new_name_music = name_music_aux.replace(c, "")
+            else:
+                new_name_music = new_name_music
+        
+        os.rename(os.path.join(name_dir, new_name_music+'.mp4'), os.path.join(name_dir, new_name_music+'.mp3'))
 
         text_area.config(state=tk.NORMAL) 
-        text_area.insert(tk.END,  f">'{result['result'][0]['title']}' successful download.\n")
+        text_area.insert(tk.END,  f"> '{new_name_music}' -> successful download.\n")
         text_area.config(state=tk.DISABLED)
 
     except Exception as e:
         text_area.config(state=tk.NORMAL) 
-        text_area.insert(tk.END, f">'{result['result'][0]['title']}' fail download.\n'{e}'\n")
+        #text_area.insert(tk.END, f">'{result['result'][0]['title']}' fail download.\n'{e}'\n")
+        text_area.insert(tk.END, f">Fail download.\n'{e}'\n")
         text_area.config(state=tk.DISABLED)
 
 def bar_progres(segment, total, long):
     porcent = segment / total
     complete = int(porcent * long)
     missing = long - complete
-    bar = f"[{'#' * complete}{'°' * missing}{porcent:.2%}]"
+    bar = f"[{'#' * complete}{'-' * missing}]{porcent:.2%}"
     return bar
 
 #Settings of window 
@@ -185,3 +221,4 @@ text_area.pack()
 window.mainloop()
 
 #https://open.spotify.com/playlist/1IzIMoFRUoLCg4GMkvmNPs?si=f28c40f6020a466b
+#http://localhost/?code=AQC7ozfoqYnHoWQiwrFbSEBFjkTTHz4-GM-j-lNAt7i6dftsmHUadvzEmgLx478tZeSoMHXBeLIAMqGXB4og3vPM8YyjAYdRPhbnvZV_8is0CMoWLEOGH_cVLK1vMAQ7WhKdfphvwxJBqQACgsUwVvzTEK03w__DA9DNzoS_PJRsXazOXiCNK3C0QA4
