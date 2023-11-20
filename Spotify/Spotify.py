@@ -85,7 +85,7 @@ def get_name_music(playlist_id):
         
         return list_name, name_dir
     except Exception as e:
-        messagebox.showinfo("Error!!!...", "The playlist doesn't exist.\n"+str(e))
+        messagebox.showinfo("Error!!!...", f"The playlist doesn't exist.\n{e}")
         return "", ""
 
 def create_dir(name):
@@ -149,7 +149,7 @@ def download_music(name_music, name_dir):
 
     except Exception as e:
         text_area.config(state=tk.NORMAL) 
-        text_area.insert(tk.END, f">'{result['result'][0]['title']}' fail download.\n"+str(e)+"\n")
+        text_area.insert(tk.END, f">'{result['result'][0]['title']}' fail download.\n'{e}'\n")
         text_area.config(state=tk.DISABLED)
 
 def bar_progres(segment, total, long):
