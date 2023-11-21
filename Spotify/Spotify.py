@@ -39,8 +39,13 @@ def get_URL():
             if('?' in playlist_array[4]):
                 #Descomponemos la ultima parte de la URL donde se encuentra el ID de la playlist separado por '?'
                 playlist_id =  playlist_array[4].split('?')
+                playlist_id = playlist_id[0]
+            else:
+                 playlist_id =  playlist_array[4]   
 
-                list_name, name_dir = get_name_music(playlist_id[0])
+            list_name, name_dir = get_name_music(playlist_id)
+
+            if list_name != "":
                 i=1
                 limit = len(list_name)
                 print("\nDownloading")
@@ -53,29 +58,35 @@ def get_URL():
 
                 textbox.delete(0, tk.END)
                 print("\n\nDownload complete\n")
-            else:
-                messagebox.showinfo("Error!!!...", "Enter a URL with a valid ID")
-                textbox.delete(0, tk.END)
+            #else:
+                #messagebox.showinfo("Error!!!...", "Enter a URL with a valid ID")
         else:
             messagebox.showinfo("Error!!!...", "Enter a URL for the playlis")
-            textbox.delete(0, tk.END)
     else:
         messagebox.showinfo("Error!!!...", "Enter a URL")
-        textbox.delete(0, tk.END)
+    textbox.delete(0, tk.END)
 
 def get_name_music(playlist_id):
-    sp = credentials()
-    # Obtiene la lista de reproducción
-    playlist = sp.playlist(playlist_id)
-    name_dir = create_dir(playlist['name'])
 
-    list_name = []
-    # Imprime los nombres de las canciones
-    for item in playlist['tracks']['items']:
-        track = item['track']
-        list_name.append(track['name'])
-    
-    return list_name, name_dir
+    try:
+        sp = credentials()
+        # Obtiene la lista de reproducción
+        playlist = sp.playlist(playlist_id)
+        name_dir = create_dir(playlist['name'])
+
+        text_area.config(state=tk.NORMAL) 
+        text_area.insert(tk.END,  f"----------'{name_dir}'----------\n")
+        text_area.config(state=tk.DISABLED)
+        list_name = []
+        # Imprime los nombres de las canciones
+        for item in playlist['tracks']['items']:
+            track = item['track']
+            list_name.append(track['name'])
+        
+        return list_name, name_dir
+    except Exception as e:
+        messagebox.showinfo("Error!!!...", "The playlist doesn't exist.\n"+str(e))
+        return "", ""
 
 def create_dir(name):
     try:
@@ -84,7 +95,7 @@ def create_dir(name):
     except FileExistsError:
         new_name = ""
         while new_name == "":
-            new_name = simpledialog.askstring("New name", "Enter a new name for the directory.:")
+            new_name = simpledialog.askstring("New name", "Playlist exist\nEnter a new name for the directory.:")
 
             if new_name == None or validate_name(new_name) != True:
                 messagebox.showinfo("Error!!!...", "Enter a valid name")
