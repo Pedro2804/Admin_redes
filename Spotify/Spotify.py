@@ -77,12 +77,9 @@ def get_URL():
                     bar = bar_progres(i, limit, 50)
                     print(f"{bar}", end = "\r")
                     i += 1
-                    #break
 
                 textbox.delete(0, tk.END)
                 print("\n\nDownload complete\n")
-            #else:
-                #messagebox.showinfo("Error!!!...", "Enter a URL with a valid ID")
         else:
             messagebox.showinfo("Error!!!...", "Enter a URL for the playlis")
     else:
@@ -97,7 +94,7 @@ def get_name_music(playlist_id):
         #text_area.config(state=tk.NORMAL) 
         #text_area.insert(tk.END,  request)
         #text_area.config(state=tk.DISABLED)
-        #exit()
+
         # Obtiene la lista de reproducción
         playlist = sp.playlist(playlist_id)
         name_dir = create_dir(playlist['name'])
@@ -113,14 +110,22 @@ def get_name_music(playlist_id):
         
         return list_name, name_dir
     except Exception as e:
-        #print(f"{e}")
         messagebox.showinfo("Error!!!...", f"The playlist doesn't exist.\n{e}")
         return "", ""
 
 def create_dir(name):
     try:
-        os.mkdir(name)
-        return name
+        new_name = name
+        if validate_name(name) == True:
+            new_name = name
+        else:
+            char = ['\\', '/', ':', '*', '?', '"', '<', '>', '|', "'", '.', ',']
+            for c in char:
+                if c in name:
+                    new_name = name.replace(c, "")
+
+        os.mkdir(new_name)
+        return new_name
     except FileExistsError:
         new_name = ""
         while new_name == "":
@@ -134,7 +139,7 @@ def create_dir(name):
 
 def validate_name(name):
     # Lista de caracteres no permitidos en nombres de carpetas en Windows
-    char = ['\\', '/', ':', '*', '?', '"', '<', '>', '|']
+    char = ['\\', '/', ':', '*', '?', '"', '<', '>', '|', '.', ',']
     
     #Caracteres no permitidos
     if any(c in name for c in char):
@@ -167,32 +172,34 @@ def download_music(name_music, name_dir):
         #video.streams.filter(only_audio=True).first().download(output_path=name_dir)
         video.streams.get_audio_only().download(output_path=name_dir)
         
-        name_music_aux = video.title
-        new_name_music = name_music_aux
-        char = ['\\', '/', ':', '*', '?', '"', '<', '>', '|', "'"]
+        new_name_music = video.title
+        char = ['\\', '/', ':', '*', '?', '"', '<', '>', '|', "'", '.', ',']
         for c in char:
-            if c in name_music_aux:
-                new_name_music = name_music_aux.replace(c, "")
-            else:
-                new_name_music = new_name_music
+            if c in new_name_music:
+                new_name_music = new_name_music.replace(c, "")
+
+        if os.path.isfile(name_dir+'\\'+new_name_music+'.mp3'):
+                os.remove(name_dir+'\\'+new_name_music+'.mp3')
         
         os.rename(os.path.join(name_dir, new_name_music+'.mp4'), os.path.join(name_dir, new_name_music+'.mp3'))
 
         text_area.config(state=tk.NORMAL) 
-        text_area.insert(tk.END,  f"> '{new_name_music}' -> successful download.\n")
+        text_area.tag_configure("colorG", foreground="green")
+        text_area.insert(tk.END,  f"> '{new_name_music}' -> Successful download.\n", "colorG")
         text_area.config(state=tk.DISABLED)
 
     except Exception as e:
         text_area.config(state=tk.NORMAL) 
         #text_area.insert(tk.END, f">'{result['result'][0]['title']}' fail download.\n'{e}'\n")
-        text_area.insert(tk.END, f">Fail download.\n'{e}'\n")
+        text_area.tag_configure("colorR", foreground="red")
+        text_area.insert(tk.END, f">Fail download.\n'{e}'\n", "colorR")
         text_area.config(state=tk.DISABLED)
 
 def bar_progres(segment, total, long):
-    porcent = segment / total
-    complete = int(porcent * long)
+    percentage = segment / total
+    complete = int(percentage * long)
     missing = long - complete
-    bar = f"[{'#' * complete}{'-' * missing}]{porcent:.2%}"
+    bar = f"[{'#' * complete}{'-' * missing}]{percentage:.2%}"
     return bar
 
 #Settings of window 
