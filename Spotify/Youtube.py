@@ -45,8 +45,9 @@ def get_URL():
                         #print(f"{bar}", end = "\r")
                         #download_thread = threading.Thread(target=download_music, args=(video_link, option))
                         #download_thread.start()
+                        print("Downloading")
                         download_music(video_link, option)
-                        print()
+                        #print()
                         #bar = bar_progres(i, limit, 50)
                         #print(f"{bar}", end = "\r")
                         #i += 1
@@ -119,7 +120,7 @@ def on_progress(stream, chunk, bytes_remaining):
         complete = int(percentage * long)
         missing = long - complete
 
-        print(f"Downloading\n[{'=' * complete}{'-' * missing}]{percentage:.2%}", end = "\r")
+        print(f"[{'=' * complete}{'-' * missing}]{percentage:.2%}", end = "\r")
     
     progress_thread = threading.Thread(target=print_progress)
     progress_thread.start()
@@ -164,3 +165,4 @@ window.mainloop()
 #https://www.youtube.com/watch?v=-ao4rU5T5iE
 #https://www.youtube.com/watch?v=qXa8LjXNshs
 #https://www.youtube.com/watch?v=iAMAqUB7ScE
+#https://www.youtube.com/watch?v=R1wwopVP7-A
