@@ -28,7 +28,7 @@ if [ $(whoami) = root ]; then
 		printf "\n\t\t\tIngresa un nuevo usuario: ";
 		read username;
 		dir="/home/$username";
-		shell="/bim/bash";
+		shell="/bin/bash";
 		if [ -d "/home/$username" ] || [ -z  "$username" ]; then
 			clear
 			error "Ya existe el usuario y no debe ser vacío\n";
@@ -80,7 +80,7 @@ if [ $(whoami) = root ]; then
 				fi
 			done
 			while true; do
-				printf "\n\t\t\tFecha de expiración de la contraseña: ";
+				printf "\n\t\t\tFecha de expiración de la contraseña (YYYY-MM-DD): ";
 				read max;
 				if [[ $max =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
 					if date -d "$max" &>/dev/null; then
@@ -109,7 +109,7 @@ if [ $(whoami) = root ]; then
 			done
 
 			while true; do
-				printf "\n\t\t\tNumero de días antes de la expiración de la contraseña (ENTER para asignar 0): ";
+				printf "\n\t\t\tNumero de días antes de la expiración de la contraseña (ENTER para asignar 0): "; #Alerta
 				read warm;
 				if [ -z "$warm" ]; then
 					warm=0;
@@ -190,18 +190,23 @@ if [ $(whoami) = root ]; then
 			done;
 
 			printf "\n\n\t\t\t--- En /etc/passwd\n";
+			#echo "$username:x:$uid:$gid:$comentario:$dir:$shell" >> /etc/passwd;
             printf "\t\t\t$username:x:$uid:$gid:$comentario:$dir:$shell\n";
 
 			printf "\n\t\t\t--- En /etc/group\n";
+			#echo "$namegroup:x:$gid:$username" >> /etc/group;
 			printf "\t\t\t$namegroup:x:$gid:$username\n";
 
 			if [ -z "$passwd" ]; then
 				hashed_passwd="*";
 			else
-				hashed_passwd=$(printf -n "$passwd" | sha256sum | awk '{print $1}');
+				hashed_passwd=$(echo -n "$passwd" | sha256sum | awk '{print $1}');
 			fi
 			printf "\n\t\t\t--- En /etc/shadow\n";
-			printf "\t\t\t$username:$hashed_passwd:$lastchg:$min:$max:$warm:$inactive::\n\n";
+			aux=$((max - fecha_ac))
+			res=$(((aux / (24 * 60 * 60) + 1)))
+			echo "$username:$hashed_passwd:$lastchg:$min:$res:$warm:$inactive::" >> /home/cipher/Documentos/prueba.txt;
+			printf "\t\t\t$username:$hashed_passwd:$lastchg:$min:$res:$warm:$inactive::\n\n";
 			break;
 		fi
 	done
