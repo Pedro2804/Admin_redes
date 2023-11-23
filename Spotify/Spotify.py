@@ -247,7 +247,7 @@ window = tk.Tk()
 
 alert = tk.Toplevel(window)
 alert.title("Please wait...")
-#alert.attributes('-toolwindow', True)
+alert.attributes('-toolwindow', True)
 alert.protocol("WM_DELETE_WINDOW", close_button)
 screen_width = alert.winfo_screenwidth()
 screen_height = alert.winfo_screenheight()
