@@ -171,11 +171,11 @@ def download_music(name_music, name_dir, i, total):
 
         # Seleccionar solo las corrientes de audio
         #video.streams.filter(only_audio=True).first().download(output_path=name_dir)
-        label_size.config(text=f"{0.0}MB - {round((video.streams.get_audio_only().filesize/1048576), 2)}MB {0:.0%} Completado")
-        label_count.config(text=f"{i+1} de {total} Canciones")
+        label_size.config(text=f"{0.0}MB - {round((video.streams.get_audio_only().filesize/1048576), 2)}MB {0:.0%} Complete")
+        label_count.config(text=f"{i+1} of {total} Songs")
         bar.pack()
         label_size.pack()
-        label_D.config(text=f"Descargando '{video.title}.mp3'")
+        label_D.config(text=f"Downloading '{video.title}.mp3'")
         bar['value']=0
 
         video.streams.get_audio_only().download(output_path=name_dir)
@@ -197,7 +197,7 @@ def download_music(name_music, name_dir, i, total):
         text_area.config(state=tk.DISABLED)
 
         if i == (total-1):
-            messagebox.showinfo("", "Descarga completa")
+            messagebox.showinfo("", "Download complete")
             textbox.config(state=tk.NORMAL)
             textbox.delete(0, tk.END)
             label_D.config(text=f"")
@@ -231,7 +231,7 @@ def on_progress(stream, chunk, bytes_remaining):
     percentage = segmen / total
     complete = int(percentage * long)
     bar['value']=(complete*2)
-    label_size.config(text=f"{round((segmen/1048576), 2)}MB - {round((total/1048576), 2)}MB {percentage:.0%} Completado")
+    label_size.config(text=f"{round((segmen/1048576), 2)}MB - {round((total/1048576), 2)}MB {percentage:.0%} Complete")
     window.update_idletasks()
     #print(f"[{'=' * complete}{'-' * missing}]{percentage:.2%}", end = "\r")
 
@@ -247,7 +247,7 @@ window = tk.Tk()
 
 alert = tk.Toplevel(window)
 alert.title("Please wait...")
-alert.attributes('-toolwindow', True)
+#alert.attributes('-toolwindow', True)
 alert.protocol("WM_DELETE_WINDOW", close_button)
 screen_width = alert.winfo_screenwidth()
 screen_height = alert.winfo_screenheight()

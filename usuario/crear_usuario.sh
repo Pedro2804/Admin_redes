@@ -1,95 +1,170 @@
 #!/bin/bash
-clear
-echo "####################CRAER NUEVO USUARIO####################";
-echo
+enter() {
+    printf "\n\t\t\tENTER para continuar";
+	read
+}
 
+error() {
+	local message=$1
+    printf "\n\n\t\t\tERROR!... $message";
+}
+
+epoca_unix(){
+	local fecha_ac=$(date +%s);
+	local epoca=$(date -d "1970-01-01" +%s);
+	local seg=$((fecha_ac - epoca_unix));
+	local res=$((seg / (24 * 60 * 60)));
+
+	local info=("$fecha_ac" "$res");
+	echo "${info[@]}";
+}
+
+clear
 max=0;
 
 if [ $(whoami) = root ]; then
 	while true; do
-		echo "Ingresa un nuevo usuario";
+		printf "\n\t\t\t####################CREAR NUEVO USUARIO####################\n";
+		printf "\n\t\t\tIngresa un nuevo usuario: ";
 		read username;
-		echo
 		dir="/home/$username";
 		shell="/bim/bash";
 		if [ -d "/home/$username" ] || [ -z  "$username" ]; then
 			clear
-			echo "Error!!!... Ya existe el usuario y no debe ser vacío";
-			echo
-			echo "ENTER para continuar";
-			read
+			error "Ya existe el usuario y no debe ser vacío\n";
+			enter
 			clear
 		else
 			uid=$(awk -F: -v max="$max" '{ if ($3 <= 1100 && $3 > max) max = $3 } END { print max+1 }' /etc/passwd);
-			echo "UID asignado: $uid";
-			echo
-			echo "Comentario";
+			printf "\n\t\t\tUID asignado: $uid\n";
+			printf "\n\t\t\tComentario: ";
 			read comentario;
-			echo
-			echo "Directorio home asignado: $dir";
-			echo
-			echo "SHELL: $shell";
-			echo
-			echo "ENTER para continuar...";
-			read
+			printf "\n\t\t\tDirectorio home asignado: $dir\n";
+			printf "\n\t\t\tSHELL: $shell\n";
+			enter
 			while true; do
 				clear
-				echo "Ingrese contraseña";
+				printf "\n\t\t\tIngrese contraseña: ";
 				read -s passwd;
-				echo
-				echo "Confirmar contraseña";
+				printf "\n\t\t\tConfirmar contraseña: ";
 				read -s passwd2;
-				echo
 				if [ "$passwd" != "$passwd2" ]; then
-					echo "ERROR!... Las contraseñas no coinciden";
-					echo
-					echo "ENTER para continuar...";
-					read
+					clear
+					error "Las contraseñas no coinciden\n";
+					enter
 				else
 					break;
 				fi
 			done
-			regex="^[0-9]{4}-[0-9]{2}-[0-9]{2}$";
-			echo "Ultimo cambio de contraseña";
-			read lastchg;
-			echo
-			echo "Min";
-			read min;
-			echo
-			echo "Max";
-			read max;
-			echo
-			echo "Warm";
-			read warm;
-			echo
-			echo "Inactive";
-			read inactive;
-			echo
+
+			result=($(epoca_unix));
+			lastchg=${result[1]};
+			fecha_ac=${result[0]};
+
+			printf "\n\n\t\t\tÚltimo cámbio de contraseña: $lastchg\n";
 			while true; do
-				echo "Ingrese fecha de expiración (YYYY-MM-DD)";
-				read expire;
-				echo
-				if [[ $expire =~ $regex ]]; then
-    					echo "La fecha ingresada no es válida. Asegúrese de seguir el formato YYYY-MM-DD.";
-					echo
+				printf "\n\t\t\tNumero minimo de dias para cambiar la contraseña (ENTER para asignar 0): ";
+				read min;
+				if [ -z "$min" ]; then
+					min=0;
+					break;
 				else
-    					break;
+					if [[ $min =~ ^[0-9]*$ ]]; then
+						break;
+					else
+						clear
+						error "Ingrese datos numéricos\n";
+						enter
+						clear
+					fi
 				fi
 			done
-			echo
-			echo "ENTER para continuar...";
-			read
-			clear
-			echo "Ingrese el nombre del grupo (solo ENTER se le asigna el nombre de usuario)";
-			read namegroup;
-
-			if [ -z "$namegroup" ]; then
-				namegroup=$username;
-			fi
+			while true; do
+				printf "\n\t\t\tFecha de expiración de la contraseña: ";
+				read max;
+				if [[ $max =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+					if date -d "$max" &>/dev/null; then
+						fecha_ingresada=$(date -d "$max" +%s);
+						if [[ $fecha_ingresada -gt $fecha_ac ]]; then
+							max=$fecha_ingresada;
+							break;
+						else
+							clear
+							error "Ingrese una fecha válida\n";
+							enter
+							clear
+						fi
+					else
+						clear
+						error "Ingrese una fecha válida.\n";
+						enter
+						clear
+					fi
+				else
+					clear
+					error "Ingrese el formato de fecha (YYYY-MM-DD)\n"
+					enter
+					clear
+				fi
+			done
 
 			while true; do
-				echo
-				echo "Ingrese GID (solo ENTER se le asigna la UID)";
+				printf "\n\t\t\tNumero de días antes de la expiración de la contraseña (ENTER para asignar 0): ";
+				read warm;
+				if [ -z "$warm" ]; then
+					warm=0;
+					break;
+				else
+					if [[ $warm =~ ^[0-9]*$ ]]; then
+						break;
+					else
+						clear
+						error "Ingrese datos numéricos\n";
+						enter
+						clear
+					fi
+				fi
+			done
+
+			while true; do
+				printf "\n\t\t\tNumero de días a transcurrir antes de desabilitar la cuenta: ";
+				read inactive;
+				if [ -z "$inactive" ]; then
+					break;
+				else
+					if [[ $inactive =~ ^[0-9]*$ ]]; then
+						break;
+					else
+						clear
+						error "Ingrese datos numéricos\n";
+						enter
+						clear
+					fi
+				fi
+			done
+			clear
+			while true; do
+				printf "\n\t\t\tIngrese el nombre del grupo (solo ENTER se le asigna el nombre de usuario): ";
+				read namegroup;
+
+				if [ -z "$namegroup" ]; then
+					namegroup=$username;
+					break;
+				else
+					validar_nom=$(awk -F: -v auxnom="$namegroup" '{ if ($1 == auxnom) v = "si" }END{ print v }' /etc/group);
+					if [ -n "$validar_nom" ]; then
+						clear
+						error "Ya existe un grupo con ese nombre\n";
+						enter
+						clear
+					else
+						break;
+					fi
+				fi
+			done
+
+			while true; do
+				printf "\n\t\t\tIngrese GID (solo ENTER se le asigna la UID): ";
 				read gid;
 
 				if [ -z "$gid" ]; then
@@ -97,34 +172,39 @@ if [ $(whoami) = root ]; then
 				fi
 
 				if [ $gid -gt 1100 ] || [ $gid -lt 1000 ]; then
-					echo "	ERROR!!!... El GID debe ser mayor a 999 y menor a 1100";
+					clear
+					error "El GID debe ser mayor a 1000 y menor a 1100\n";
+					enter
+					clear;
 				else
 					validar=$(awk -F: -v auxgid="$gid" '{ if ($3 == auxgid) v = "si" }END{ print v }' /etc/group);
 					if [ -n "$validar" ]; then
-						echo "Ya existe un grupo con ese GID";
+						clear
+						error "Ya existe un grupo con ese GID\n";
+						enter
+						clear
 					else
 						break;
 					fi
 				fi
 			done;
-			echo
-			echo "--- En /etc/passwd";
-                	echo "$username:x:$uid:$gid:$comentario:$dir:$shell";
-			echo
-			echo "-- En /etc/group";
-			echo "$namegroup:x:$gid:$username";
-			echo
+
+			printf "\n\n\t\t\t--- En /etc/passwd\n";
+            printf "\t\t\t$username:x:$uid:$gid:$comentario:$dir:$shell\n";
+
+			printf "\n\t\t\t--- En /etc/group\n";
+			printf "\t\t\t$namegroup:x:$gid:$username\n";
+
 			if [ -z "$passwd" ]; then
-				hashed_passwd="!";
+				hashed_passwd="*";
 			else
-				hashed_passwd=$(echo -n "$passwd" | sha256sum | awk '{print $1}');
+				hashed_passwd=$(printf -n "$passwd" | sha256sum | awk '{print $1}');
 			fi
-			echo "---En /etc/shadow";
-			echo "$username:$hashed_passwd:$lastchg:$min:$max:$warm:$inactive:$expire";
-			echo
+			printf "\n\t\t\t--- En /etc/shadow\n";
+			printf "\t\t\t$username:$hashed_passwd:$lastchg:$min:$max:$warm:$inactive::\n\n";
 			break;
 		fi
 	done
 else
-        echo "No tienes permisos para crear un nuevo usuario";
+        error "No tienes permisos para crear un nuevo usuario\n";
 fi
