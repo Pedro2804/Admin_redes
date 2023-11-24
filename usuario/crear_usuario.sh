@@ -190,11 +190,9 @@ if [ $(whoami) = root ]; then
 			done;
 
 			printf "\n\n\t\t\t--- En /etc/passwd\n";
-			#echo "$username:x:$uid:$gid:$comentario:$dir:$shell" >> /etc/passwd;
             printf "\t\t\t$username:x:$uid:$gid:$comentario:$dir:$shell\n";
 
 			printf "\n\t\t\t--- En /etc/group\n";
-			#echo "$namegroup:x:$gid:$username" >> /etc/group;
 			printf "\t\t\t$namegroup:x:$gid:$username\n";
 
 			if [ -z "$passwd" ]; then
@@ -205,8 +203,19 @@ if [ $(whoami) = root ]; then
 			printf "\n\t\t\t--- En /etc/shadow\n";
 			aux=$((max - fecha_ac))
 			res=$(((aux / (24 * 60 * 60) + 1)))
-			echo "$username:$hashed_passwd:$lastchg:$min:$res:$warm:$inactive::" >> /home/cipher/Documentos/prueba.txt;
 			printf "\t\t\t$username:$hashed_passwd:$lastchg:$min:$res:$warm:$inactive::\n\n";
+
+			echo "$username:x:$uid:$gid:$comentario:$dir:$shell" >> /etc/passwd;
+			echo "$namegroup:x:$gid:$username" >> /etc/group;
+			echo "$username:$hashed_passwd:$lastchg:$min:$res:$warm:$inactive::" >> /etc/shadow;
+
+			mkdir /home/$username
+			chmod a-rwx /home/$username
+			chmod u=rwx,g=rx,o= /home/$username
+			find /etc/skel -maxdepth 1 -name ".*" -exec cp -r {} /home/$username/ \;
+			chown -R $username:$namegroup /home/$username
+			#find /etc/skel -mindepth 1 -maxdepth 1 \( ! -name '.' -a ! -name '..' \) -exec cp -r {} /home/$username/ \;
+			#cp -r /etc/skel/.* /home/$username
 			break;
 		fi
 	done
