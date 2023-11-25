@@ -2,24 +2,16 @@
 
 source interfaz.sh;
 
-epoca_unix(){
-	local fecha_ac=$(date +%s);
-	local epoca=$(date -d "1970-01-01" +%s);
-	local seg=$((fecha_ac - epoca_unix));
-	local res=$((seg / (24 * 60 * 60)));
-
-	local info=("$fecha_ac" "$res");
-	echo "${info[@]}";
-}
+trap 'abortar' INT TSTP
 
 clear
 max=0;
 
+main 76 "CREAR NUEVO USUARIO";
 if [ $(whoami) = root ]; then
 	while true; do
-		main 76 "CREAR NUEVO USUARIO";
-		label 6 70 "> Ingresa un nuevo usuario: ";
-		move_cursor 5 97;
+		label 12 70 "> Ingresa un nuevo usuario:";
+		move_cursor 11 97;
 		read username;
 		validar_u=$(awk -F: -v aux_u="$username" '{ if ($1 == aux_u) v = "si" }END{ print v }' /etc/passwd);
 		
@@ -33,26 +25,26 @@ if [ $(whoami) = root ]; then
 			dir="/home/$username";
 			shell="/bin/bash";
 			uid=$(awk -F: -v max="$max" '{ if ($3 <= 1100 && $3 > max) max = $3 } END { print max+1 }' /etc/passwd);
-			label 8 70 "> UID asignado: $uid";
-			label 10 70 "> Comentario: ";
-			move_cursor 9 83;
+			label 14 70 "> UID asignado: $uid";
+			label 16 70 "> Comentario: ";
+			move_cursor 15 83;
 			read comentario;
 
 			if [ -z "$comentario" ]; then
 				comentario="$username";
 			fi
 
-			label 12 70 "> Directorio home asignado: $dir";
-			label 14 70 "> SHELL: $shell";
-			enter 18;
+			label 18 70 "> Directorio home asignado: $dir";
+			label 20 70 "> SHELL: $shell";
+			enter 24;
+			clear
+			main 80 "CONTRASEÑA";
 			while true; do
-				clear
-				main 80 "CONTRASEÑA";
-				label 6 68 "> Ingrese contraseña para '$username': ";
-				move_cursor 5 102;
+				label 12 68 "> Ingrese contraseña para '$username':";
+				move_cursor 11 102;
 				read -s passwd;
-				label 7 68 "> Confirmar contraseña: ";
-				move_cursor 6 91;
+				label 13 68 "> Confirmar contraseña:";
+				move_cursor 12 91;
 				read -s passwd2;
 				if [ "$passwd" != "$passwd2" ]; then
 					error 68 "Las contraseñas no coinciden" "CONTRASEÑA" 80;
@@ -61,17 +53,13 @@ if [ $(whoami) = root ]; then
 				fi
 			done
 
-			result=($(epoca_unix));
-			lastchg=${result[1]};
-			aux=$(date -d "@$((lastchg * 86400))" "+%Y-%m-%d");
-			fecha_ac=${result[0]};
+			fecha_ac=$(date +%s);
+			lastchg=$((fecha_ac / 86400));
+			aux_last=$(date -d "@$fecha_ac" "+%Y-%m-%d");
 
 			while true; do
-				main 80 "CONTRASEÑA";
-				label 9 68 "> Último cámbio de contraseña: $aux";
-				label 6 68 "> Ingrese contraseña para '$username': ";
-				label 7 68 "> Confirmar contraseña: ";
-				label 11 68 "> Días mínimos entre cambio de contraseña (0): ";
+				label 15 68 "> Último cámbio de contraseña: $aux_last";
+				label 17 68 "> Días mínimos entre cambio de contraseña (0):";
 				read min;
 				if [ -z "$min" ]; then
 					min=0;
@@ -81,13 +69,15 @@ if [ $(whoami) = root ]; then
 						break;
 					else
 						error 70 "Ingrese datos numéricos" "CONTRASEÑA" 80;
+						label 12 68 "> Ingrese contraseña para '$username':";
+						label 13 68 "> Confirmar contraseña:";
 					fi
 				fi
 			done
 
 			while true; do
-				label 13 68 "> Fecha de expiración de la contraseña (YYYY-MM-DD): ";
-				move_cursor 12 120;
+				label 19 68 "> Fecha de expiración de la contraseña (YYYY-MM-DD):";
+				move_cursor 18 120;
 				read max;
 				if [ -z "$max" ]; then
 					max=99999;
@@ -96,38 +86,48 @@ if [ $(whoami) = root ]; then
 					if date -d "$max" &>/dev/null; then
 						fecha_ingresada=$(date -d "$max" +%s);
 						if [[ $fecha_ingresada -gt $fecha_ac ]]; then
-							max=$fecha_ingresada;
-							aux=$((max - fecha_ac))
-							max=$(((aux / (24 * 60 * 60) + 1)))
+							aux_max=$(date -d "@$fecha_ingresada" "+%Y-%m-%d");
+							max=$(((fecha_ingresada / 86400)));
 							break;
 						else
-							error "Ingrese una fecha válida\n";
+							error 70 "Ingrese una fecha válida" "CONTRASEÑA" 80;
 						fi
 					else
-						error "Ingrese una fecha válida.\n";
+						error 70 "Ingrese una fecha válida" "CONTRASEÑA" 80;
 					fi
 				else
-					error "Ingrese el formato de fecha (YYYY-MM-DD)\n"
+					error 63 "Ingrese el formato de fecha (YYYY-MM-DD)" "CONTRASEÑA" 80;
 				fi
+				label 12 68 "> Ingrese contraseña para '$username':";
+				label 13 68 "> Confirmar contraseña:";
+				label 15 68 "> Último cámbio de contraseña: $aux_last";
+				label 17 68 "> Días mínimos entre cambio de contraseña (0): $min";
 			done
 
 			while true; do
-				printf "\n\t\t\tNúmero de días de aviso antes de que caduque la contraseña (ENTER para asignar 0): "; #Alerta
+				label 21 68 "> Días de aviso antes de que caduque la contraseña (7): "; #Alerta
+				move_cursor 20 123;
 				read warm;
 				if [ -z "$warm" ]; then
-					warm=0;
+					warm=7;
 					break;
 				else
 					if [[ $warm =~ ^[0-9]*$ ]]; then
 						break;
 					else
-						error "Ingrese datos numéricos\n";
+						error 65 "Ingrese datos numéricos y positivos" "CONTRASEÑA" 80;
 					fi
 				fi
+				label 12 68 "> Ingrese contraseña para '$username':";
+				label 13 68 "> Confirmar contraseña:";
+				label 15 68 "> Último cámbio de contraseña: $aux_last";
+				label 17 68 "> Días mínimos entre cambio de contraseña (0): $min";
+				label 19 68 "> Fecha de expiración de la contraseña (YYYY-MM-DD): $aux_max";
 			done
 
 			while true; do
-				printf "\n\t\t\tNúmero de días a transcurrir antes de deshabilitar la cuenta: ";
+				label 23 68 "> Días antes de deshabilitar la cuenta:"; 
+				move_cursor 22 107
 				read inactive;
 				if [ -z "$inactive" ]; then
 					break;
@@ -135,13 +135,22 @@ if [ $(whoami) = root ]; then
 					if [[ $inactive =~ ^[0-9]*$ ]]; then
 						break;
 					else
-						error "Ingrese datos numéricos\n";
+						error 65 "Ingrese datos numéricos y positivos" "CONTRASEÑA" 80;
 					fi
 				fi
+				label 12 68 "> Ingrese contraseña para '$username':";
+				label 13 68 "> Confirmar contraseña:";
+				label 15 68 "> Último cámbio de contraseña: $aux_last";
+				label 17 68 "> Días mínimos entre cambio de contraseña (0): $min";
+				label 19 68 "> Fecha de expiración de la contraseña (YYYY-MM-DD): $aux_max";
+				label 21 68 "> Días de aviso antes de que caduque la contraseña (0): $warm";
 			done
+			enter 25;
 			clear
+			main 82 "GRUPO";
 			while true; do
-				printf "\n\t\t\tIngrese el nombre del grupo (solo ENTER se le asigna el nombre de usuario): ";
+				label 12 58 "> Nombre del nuevo grupo (ENTER para nombre de usuario):";
+				move_cursor 11 114;
 				read namegroup;
 
 				if [ -z "$namegroup" ]; then
@@ -150,7 +159,7 @@ if [ $(whoami) = root ]; then
 				else
 					validar_nom=$(awk -F: -v auxnom="$namegroup" '{ if ($1 == auxnom) v = "si" }END{ print v }' /etc/group);
 					if [ -n "$validar_nom" ]; then
-						error "Ya existe un grupo con ese nombre\n";
+						error 65 "Ya existe un grupo con ese nombre" "GRUPO" 82;
 					else
 						break;
 					fi
@@ -158,29 +167,31 @@ if [ $(whoami) = root ]; then
 			done
 
 			while true; do
-				printf "\n\t\t\tIngrese GID (solo ENTER se le asigna la UID): ";
+				label 14 58 "> Ingrese GID (ENTER se le asigna la UID):";
+				move_cursor 13 100;
 				read gid;
 
 				if [ -z "$gid" ]; then
 					gid=$uid;
-				fi
-
-				if [ $gid -gt 1100 ] || [ $gid -lt 1000 ]; then
-					error "El GID debe ser mayor a 1000 y menor a 1100\n";
+					break;
+				elif [ $gid -gt 1100 ] || [ $gid -lt 1000 ]; then
+					error 62 "El GID debe ser mayor a 1000 y menor a 1100" "GRUPO" 82;
 				else
 					validar=$(awk -F: -v auxgid="$gid" '{ if ($3 == auxgid) v = "si" }END{ print v }' /etc/group);
 					if [ -n "$validar" ]; then
-						error "Ya existe un grupo con ese GID\n";
+						error 65 "Ya existe un grupo con ese GID" "GRUPO" 82;
 					else
 						break;
 					fi
 				fi
+
+				label 12 58 "> Nombre del nuevo grupo (ENTER para nombre de usuario): $namegroup";
 			done;
 
-			printf "\n\n\t\t\t--- En /etc/passwd\n";
-            printf "\t\t\t$username:x:$uid:$gid:$comentario:$dir:$shell\n";
-			printf "\n\t\t\t--- En /etc/group\n";
-			printf "\t\t\t$namegroup:x:$gid:$username\n";
+			#printf "\n\n\t\t\t--- En /etc/passwd\n";
+            #printf "\t\t\t$username:x:$uid:$gid:$comentario:$dir:$shell\n";
+			#printf "\n\t\t\t--- En /etc/group\n";
+			#printf "\t\t\t$namegroup:x:$gid:$username\n";
 
 			if [ -z "$passwd" ]; then
 				pass="*";
@@ -194,15 +205,10 @@ if [ $(whoami) = root ]; then
 					salt+="${caracteres:$index_rand:1}";
 				done
 
-				#hashed_passwd=$(echo -n "$passwd2" | sha256sum | awk '{print $1}');
 				pass=$(openssl passwd -5 -salt "$salt" "$passwd");
-
-				#alg=5;
-				#pass="\$${alg}\$${salt}\$${hashed_passwd}/";
 			fi
-			printf "\n\t\t\t--- En /etc/shadow\n";
-
-			printf "\t\t\t$username:$pass:$lastchg:$min:$max:$warm:$inactive::\n\n";
+			#printf "\n\t\t\t--- En /etc/shadow\n";
+			#printf "\t\t\t$username:$pass:$lastchg:$min:$max:$warm:$inactive::\n\n";
 
 			echo "$username:x:$uid:$gid:$comentario:$dir:$shell" >> /etc/passwd;
 			echo "$namegroup:x:$gid:$username" >> /etc/group;
@@ -213,7 +219,10 @@ if [ $(whoami) = root ]; then
 			chmod u=rwx,g=rx,o= /home/$username
 			find /etc/skel -maxdepth 1 -name ".*" -exec cp -r {} /home/$username/ \;
 			chown -R $username:$namegroup /home/$username
-			chage -l $username
+
+			finish
+			#chage -l $username
+
 			#find /etc/skel -mindepth 1 -maxdepth 1 \( ! -name '.' -a ! -name '..' \) -exec cp -r {} /home/$username/ \;
 			#cp -r /etc/skel/.* /home/$username
 			break;
@@ -223,5 +232,4 @@ else
         error "No tienes permisos para crear un nuevo usuario\n";
 fi
 
-#$5$ySze$ScWsm1fAmgeXDdsn7qFMAF5cGxacxLovhX8DNk1H0g/
-#$5$ySze$83542007f718e172f71de03400cba22f22369b45b0f93a430f617104e36e7d5d -n
+exit 0;
