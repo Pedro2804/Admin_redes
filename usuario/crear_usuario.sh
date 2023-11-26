@@ -7,8 +7,8 @@ trap 'abortar' INT TSTP
 clear
 max=0;
 
-main 76 "CREAR NUEVO USUARIO";
 if [ $(whoami) = root ]; then
+	main 76 "CREAR NUEVO USUARIO";
 	while true; do
 		label 12 70 "> Ingresa un nuevo usuario:";
 		move_cursor 11 97;
@@ -220,7 +220,7 @@ if [ $(whoami) = root ]; then
 			find /etc/skel -maxdepth 1 -name ".*" -exec cp -r {} /home/$username/ \;
 			chown -R $username:$namegroup /home/$username
 
-			finish
+			finish 68 "-----USUARIO CREADO EXITOSAMENTE-----";
 			#chage -l $username
 
 			#find /etc/skel -mindepth 1 -maxdepth 1 \( ! -name '.' -a ! -name '..' \) -exec cp -r {} /home/$username/ \;
@@ -229,7 +229,7 @@ if [ $(whoami) = root ]; then
 		fi
 	done
 else
-        error "No tienes permisos para crear un nuevo usuario\n";
+        printf "No tienes permisos para crear un nuevo usuario\n";
 fi
 
 exit 0;

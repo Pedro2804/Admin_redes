@@ -60,7 +60,7 @@ function finish(){
 		done
 	done
 
-	label 20 68 "-----USUARIO CREADO EXITOSAMENTE-----";
+	label 20 $1 "$2";
 	enter 25;
 	clear;
 }
