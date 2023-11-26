@@ -54,7 +54,7 @@ if [ $(whoami) = root ]; then
 			done
 
 			fecha_ac=$(date +%s);
-			lastchg=$((fecha_ac / 86400));
+			lastchg=$(((fecha_ac / 86400) - 1));
 			aux_last=$(date -d "@$fecha_ac" "+%Y-%m-%d");
 
 			while true; do
@@ -212,7 +212,7 @@ if [ $(whoami) = root ]; then
 
 			echo "$username:x:$uid:$gid:$comentario:$dir:$shell" >> /etc/passwd;
 			echo "$namegroup:x:$gid:$username" >> /etc/group;
-			echo "$username:$pass:$lastchg:$min:$res:$warm:$inactive::" >> /etc/shadow;
+			echo "$username:$pass:$lastchg:$min:$max:$warm:$inactive::" >> /etc/shadow;
 
 			mkdir /home/$username
 			chmod a-rwx /home/$username

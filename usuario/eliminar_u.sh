@@ -16,12 +16,14 @@ if [ $(whoami) = root ]; then
         if [ -n "$dir" ]; then
             rm -r /home/$username;
 
-            linea_passwd=$(awk -F: -v usuario="$username" '$1 == usuario' /etc/passwd);
+            linea=$(awk -F: -v usuario="$username" '$1 == usuario' /etc/passwd);
+            linea_passwd=$(printf '%s\n' "$linea" | sed -e 's/[]\/$*.^[]/\\&/g');
             sed -i "/$linea_passwd/d" /etc/passwd
 
-            linea_shadow=$(awk -F: -v usuario="$username" '$1 == usuario' /etc/shadow);
+            linea=$(awk -F: -v usuario="$username" '$1 == usuario' /etc/shadow);
+            linea_shadow=$(printf '%s\n' "$linea" | sed -e 's/[]\/$*.^[]/\\&/g');
             sed -i "/$linea_shadow/d" /etc/shadow
-            
+
             finish 72 "-----USUARIO ELIMINADO-----";
             main 76 "ELIMINAR USUARIO";
             label 12 63 "> Ingresa el nombre de usuario a eliminar: $username";
@@ -47,10 +49,11 @@ if [ $(whoami) = root ]; then
                             elif ! [[ $group =~ ^[a-z0-9_]{1,32}$ ]]; then
                                 error 55 "Ingrese datos alfanuméricos y minúsculas sin espacio" "ELIMINAR GRUPO" 77;
                             else
-                                linea_group=$(awk -F: -v grupo="$group" '$1 == grupo' /etc/group);
+                                linea=$(awk -F: -v grupo="$group" '$1 == grupo' /etc/group);
                                 
-                                if [ -n "$linea_group" ]; then
-                                    sed -i "/$linea_passwd/d" /etc/passwd
+                                if [ -n "$linea" ]; then
+                                    linea_group=$(printf '%s\n' "$linea" | sed -e 's/[]\/$*.^[]/\\&/g');
+                                    sed -i "/$linea_group/d" /etc/group
                                     finish 73 "-----GRUPO ELIMINADO-----";
                                     exit 0;
                                 else
