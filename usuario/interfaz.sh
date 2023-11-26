@@ -1,7 +1,7 @@
 
 function main(){
-	for ((i=0; i<40; i++)); do
-		for ((j=0; j<170; j++)); do
+	for ((i=0; i<50; i++)); do
+		for ((j=0; j<171; j++)); do
 			if [ $i -lt 8 ] || [ $i -gt 27 ] ; then
 				label $i $j "*";
 			elif [ $j -lt 35 ] || [ $j -gt 134 ] ; then
@@ -50,8 +50,8 @@ function abortar() {
 }
 
 function finish(){
-	for ((i=0; i<40; i++)); do
-		for ((j=0; j<170; j++)); do
+	for ((i=0; i<50; i++)); do
+		for ((j=0; j<171; j++)); do
 			if [ $i -lt 15 ] || [ $i -gt 27 ] ; then
 				label $i $j "!";
 			elif [ $j -lt 55 ] || [ $j -gt 114 ] ; then
