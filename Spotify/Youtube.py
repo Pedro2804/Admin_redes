@@ -109,6 +109,9 @@ def download_music(url_video, option):
 
     except Exception as e:
         messagebox.showinfo("", "Descarga incompleta")
+
+        delete()
+
         btn_download.config(state=tk.NORMAL)
         textbox.config(state=tk.NORMAL)
         text_area.config(state=tk.NORMAL) 
@@ -117,10 +120,7 @@ def download_music(url_video, option):
         text_area.config(state=tk.DISABLED)
 
 def on_progress(stream, chunk, bytes_remaining):
-    if alert.winfo_viewable() == 1:
-        for widget in alert.winfo_children():
-            widget.destroy()
-        alert.withdraw()
+    delete()
     
     total = stream.filesize #limite
     segmen = total - bytes_remaining #segmento
@@ -136,6 +136,12 @@ def on_progress(stream, chunk, bytes_remaining):
 def show_message():
     alert.deiconify()
     tk.Label(alert, text="Iniciando descarga", font=("Bold", 14)).pack()
+
+def delete():
+    if alert.winfo_viewable() == 1:
+        for widget in alert.winfo_children():
+            widget.destroy()
+        alert.withdraw()
 
 def close_button():
     pass 

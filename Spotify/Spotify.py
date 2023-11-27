@@ -1,4 +1,4 @@
-#Importamos la libreria spotipy para poder hacer uso de la API de Spotify
+#Importamos la librería spotipy para poder hacer uso de la API de Spotify
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 # Importamos la librería tkinter para la interfaz grafica
@@ -44,18 +44,19 @@ def is_url(url):
         return False
     
 def get_URL():
+
     #Pedimos al usuario el link de su playlist de Spotify
-    #text_area.delete("1.0", tk.END)
     playlist_link = textbox.get()
 
     if(playlist_link != '' and is_url(playlist_link)):
+
         #Descomponemos la URL a un array, separando al url por '/'
         playlist_array = playlist_link.split('/')
 
-        #Verificamos que la URL pertenesca a una playlist
+        #Verificamos que la URL pertenezca a una playlist
         if(len(playlist_array) > 4 and playlist_array[3] == 'playlist'):
             if('?' in playlist_array[4]):
-                #Descomponemos la ultima parte de la URL donde se encuentra el ID de la playlist separado por '?'
+                #Descomponemos la última parte de la URL donde se encuentra el ID de la playlist separado por '?'
                 playlist_id =  playlist_array[4].split('?')
                 playlist_id = playlist_id[0]
             else:
@@ -66,7 +67,7 @@ def get_URL():
             if list_name != "":
                 def down(list_name, name_dir):
                     i = 0
-                    for name in list_name:
+                    for name in list_name: #Realizamos la descarga una a una
                         download_music(name, name_dir, i, len(list_name))
                         i += 1
 
@@ -74,7 +75,7 @@ def get_URL():
                 download_thread = threading.Thread(target=down, args=(list_name, name_dir))
                 download_thread.start()
         else:
-            messagebox.showinfo("Error!!!...", "Enter a URL for the playlis")
+            messagebox.showinfo("Error!!!...", "Enter a URL for the playlist")
             textbox.delete(0, tk.END)
     else:
         messagebox.showinfo("Error!!!...", "Enter a URL of Spotify")
@@ -96,7 +97,8 @@ def get_name_music(playlist_id):
         text_area.insert(tk.END,  f"----------'{name_dir}'----------\n")
         text_area.config(state=tk.DISABLED)
         list_name = []
-        # Imprime los nombres de las canciones
+
+        # Obtenemos los nombres de las canciones y su artista para poder realizar la búsqueda
         for item in playlist['tracks']['items']:
             track = item['track']
             #list_name.append(f"{track['name']} {track['artists'][0]['name']}")
@@ -108,7 +110,7 @@ def get_name_music(playlist_id):
         messagebox.showinfo("Error!!!...", f"The playlist doesn't exist.\n{e}")
         return "", ""
 
-def create_dir(name):
+def create_dir(name): #Creamos el directorio para almacenar las canciones
     try:
         new_name = name
         if validate_name(name) == True:
@@ -169,7 +171,7 @@ def download_music(name_music, name_dir, i, total):
         textbox.config(state=tk.DISABLED)
         btn_download.config(state=tk.DISABLED)
 
-        # Seleccionar solo las corrientes de audio
+        # Seleccionar solo las corrientes de audio y realizamos la descarga
         #video.streams.filter(only_audio=True).first().download(output_path=name_dir)
         label_size.config(text=f"{0.0}MB - {round((video.streams.get_audio_only().filesize/1048576), 2)}MB {0:.0%} Complete")
         label_count.config(text=f"{i+1} of {total} Songs")
