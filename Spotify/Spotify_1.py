@@ -39,7 +39,7 @@ def new_token(credential_old):
 def is_url(url):
     try:
         result = urlparse(url)
-        return result.netloc in {"open.spotify.com"}
+        return result.netloc in {"open.spotify.com", "playlist"}
     except ValueError:
         return False
     
